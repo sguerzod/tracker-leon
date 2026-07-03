@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
+    <meta name="description" content="Tracker académico para León Guerzo">
+    <title>Seguimiento León - Bili</title>
+    <link rel="manifest" href="data:application/json,{
+        %22name%22:%22Seguimiento de León%22,
+        %22short_name%22:%22León Tracker%22,
+        %22start_url%22:%22/%22,
+        %22display%22:%22standalone%22,
+        %22background_color%22:%22%23ffffff%22,
+        %22theme_color%22:%22%23667eea%22,
+        %22icons%22:[{
+            %22src%22:%22data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23667eea' width='192' height='192'/><text x='50%25' y='50%25' font-size='100' font-weight='bold' fill='white' text-anchor='middle' dy='.3em'>L</text></svg>%22,
+            %22sizes%22:%22192x192%22,
+            %22type%22:%22image/svg+xml%22,
+            %22purpose%22:%22any%22
+        }]
+    }">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 15px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+        }
+
+        header h1 {
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+
+        header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .btn-instalar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            display: none;
+        }
+
+        .btn-instalar.visible {
+            display: block;
+        }
+
+        .btn-instalar:hover {
+            background: #764ba2;
+        }
+
+        .controles {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .materias-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .materia-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+
+        .materia-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+
+        .materia-header {
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .materia-nombre {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .materia-calif {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .materia-calif.bajo {
+            background: #ff6b6b;
+        }
+
+        .materia-calif.medio {
+            background: #ffd93d;
+            color: #333;
+        }
+
+        .materia-calif.alto {
+            background: #6bcf7f;
+        }
+
+        .materia-body {
+            padding: 15px;
+        }
+
+        .tareas-list {
+            margin-bottom: 15px;
+        }
+
+        .tareas-list h4 {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .tarea-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tarea-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 18px;
+            height: 18px;
+        }
+
+        .tarea-item.completada {
+            opacity: 0.6;
+            text-decoration: line-through;
+            background: #e8f5e9;
+        }
+
+        .tarea-info {
+            flex: 1;
+        }
+
+        .tarea-titulo {
+            font-weight: 600;
+            display: block;
+        }
+
+        .tarea-fecha {
+            font-size: 12px;
+            color: #999;
+            margin-top: 3px;
+        }
+
+        .tarea-fecha.proximo {
+            color: #ff6b6b;
+            font-weight: 600;
+        }
+
+        .tarea-alerta {
+            display: inline-block;
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 700;
+            margin-left: 5px;
+        }
+
+        .btn-eliminar {
+            background: #ff6b6b;
+            padding: 5px 10px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            color: white;
+        }
+
+        .btn-eliminar:hover {
+            background: #ff5252;
+        }
+
+        .sin-tareas {
+            text-align: center;
+            color: #999;
+            font-size: 13px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 6px;
+        }
+
+        .resumen {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .resumen h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .proximo-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
+
+        .proximo-item {
+            background: linear-gradient(135deg, #ffd93d 0%, #ff6b6b 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .proximo-item-titulo {
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+
+        .proximo-item-materia {
+            opacity: 0.9;
+            font-size: 12px;
+        }
+
+        .sin-proximitas {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .notificacion-banner {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notificacion-banner.visible {
+            display: flex;
+        }
+
+        .notificacion-banner.exito {
+            background: #6bcf7f;
+        }
+
+        .notificacion-banner.error {
+            background: #ff6b6b;
+        }
+
+        .btn-exportar {
+            background: #764ba2;
+            padding: 10px 20px;
+            margin-top: 10px;
+        }
+
+        .btn-exportar:hover {
+            background: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <button class="btn-instalar" id="btnInstalar">📱 Instalar App</button>
+            <h1>📚 Seguimiento Académico de León</h1>
+            <p>República de Italia - 1º Año Secundaria - 2026</p>
+            <p style="margin-top: 10px; font-size: 12px; color: #999;">Alertas: 3 días y 1 día antes</p>
+        </header>
+
+        <div id="notificacionBanner" class="notificacion-banner"></div>
+
+        <div class="controles">
+            <h3 style="color: #667eea; margin-bottom: 15px;">➕ Agregar Nueva Tarea/Examen</h3>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Materia:</label>
+                    <select id="materiaSelect">
+                        <option value="">Seleccionar materia...</option>
+                        <option value="MUSICA">MUSICA</option>
+                        <option value="ARTES VISUALES">ARTES VISUALES</option>
+                        <option value="MATEMATICA">MATEMATICA</option>
+                        <option value="LENGUA Y LITERATURA">LENGUA Y LITERATURA</option>
+                        <option value="FORMACION ETICA Y CIUDADANA">FORMACION ETICA Y CIUDADANA</option>
+                        <option value="EDUCACION FISICA">EDUCACION FISICA</option>
+                        <option value="LENGUAS EXTRANJERAS">LENGUAS EXTRANJERAS</option>
+                        <option value="EDUCACION TECNOLOGICA">EDUCACION TECNOLOGICA</option>
+                        <option value="HISTORIA">HISTORIA</option>
+                        <option value="GEOGRAFIA">GEOGRAFIA</option>
+                        <option value="BIOLOGIA">BIOLOGIA</option>
+                        <option value="FISICA Y QUIMICA">FISICA Y QUIMICA</option>
+                        <option value="PROYECTO ORIENTACION Y TUTORIA">PROYECTO ORIENTACION Y TUTORIA</option>
+                        <option value="INGLÉS">FORM. COMPLEMENTARIA: INGLÉS</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Descripción:</label>
+                    <input type="text" id="tareaDescripcion" placeholder="Ej: Trabajo práctico de X">
+                </div>
+                <div class="form-group">
+                    <label>Fecha de entrega/Examen:</label>
+                    <input type="date" id="tareaFecha">
+                </div>
+                <button onclick="agregarTarea()" style="align-self: flex-end;">Agregar</button>
+            </div>
+            <button class="btn-exportar" onclick="exportarDatos()">💾 Descargar respaldo</button>
+        </div>
+
+        <div id="materiasContainer" class="materias-grid"></div>
+
+        <div class="resumen">
+            <h3>⏰ Próximas Entregas/Exámenes</h3>
+            <div id="proximosCont" class="proximo-items"></div>
+        </div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+
+        // Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('data:application/javascript,' + encodeURIComponent(`
+                self.addEventListener('install', event => {
+                    self.skipWaiting();
+                });
+
+                self.addEventListener('activate', event => {
+                    self.clients.claim();
+                });
+
+                self.addEventListener('push', event => {
+                    const data = event.data.json();
+                    event.waitUntil(
+                        self.registration.showNotification(data.title, {
+                            body: data.body,
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="%23667eea" width="192" height="192"/><text x="50%" y="50%" font-size="100" font-weight="bold" fill="white" text-anchor="middle" dy=".3em">L</text></svg>',
+                            badge: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="%23667eea" width="192" height="192"/></svg>'
+                        })
+                    );
+                });
+            `), { scope: '/' }).catch(() => {});
+        }
+
+        // Instalación PWA
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('btnInstalar').classList.add('visible');
+        });
+
+        document.getElementById('btnInstalar').addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    mostrarMensaje('✅ App instalada correctamente', 'exito');
+                }
+                deferredPrompt = null;
+            }
+        });
+
+        const materias = {
+            'MUSICA': 10,
+            'ARTES VISUALES': 8,
+            'MATEMATICA': 4,
+            'LENGUA Y LITERATURA': 7,
+            'FORMACION ETICA Y CIUDADANA': 8,
+            'EDUCACION FISICA': 7,
+            'LENGUAS EXTRANJERAS': 8,
+            'EDUCACION TECNOLOGICA': 8,
+            'HISTORIA': 9,
+            'GEOGRAFIA': 6,
+            'BIOLOGIA': 6,
+            'FISICA Y QUIMICA': 7,
+            'PROYECTO ORIENTACION Y TUTORIA': 7,
+            'INGLÉS': 6
+        };
+
+        function cargarDatos() {
+            const datos = localStorage.getItem('tareas_leon');
+            return datos ? JSON.parse(datos) : {};
+        }
+
+        function guardarDatos(datos) {
+            localStorage.setItem('tareas_leon', JSON.stringify(datos));
+            verificarAlertas();
+            renderizar();
+        }
+
+        function agregarTarea() {
+            const materia = document.getElementById('materiaSelect').value;
+            const descripcion = document.getElementById('tareaDescripcion').value;
+            const fecha = document.getElementById('tareaFecha').value;
+
+            if (!materia || !descripcion || !fecha) {
+                mostrarMensaje('⚠️ Por favor completa todos los campos', 'error');
+                return;
+            }
+
+            let datos = cargarDatos();
+            if (!datos[materia]) datos[materia] = [];
+
+            datos[materia].push({
+                id: Date.now(),
+                descripcion,
+                fecha,
+                completada: false
+            });
+
+            guardarDatos(datos);
+            mostrarMensaje('✅ Tarea agregada correctamente', 'exito');
+
+            document.getElementById('materiaSelect').value = '';
+            document.getElementById('tareaDescripcion').value = '';
+            document.getElementById('tareaFecha').value = '';
+        }
+
+        function toggleTarea(materia, id) {
+            let datos = cargarDatos();
+            const tarea = datos[materia].find(t => t.id === id);
+            if (tarea) {
+                tarea.completada = !tarea.completada;
+                guardarDatos(datos);
+            }
+        }
+
+        function eliminarTarea(materia, id) {
+            let datos = cargarDatos();
+            datos[materia] = datos[materia].filter(t => t.id !== id);
+            if (datos[materia].length === 0) delete datos[materia];
+            guardarDatos(datos);
+        }
+
+        function getCalifEstilo(calif) {
+            if (calif <= 4) return 'bajo';
+            if (calif <= 6) return 'medio';
+            return 'alto';
+        }
+
+        function diasFaltantes(fecha) {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const vencimiento = new Date(fecha);
+            const diff = Math.ceil((vencimiento - hoy) / (1000 * 60 * 60 * 24));
+            return diff;
+        }
+
+        function mostrarMensaje(texto, tipo = 'exito') {
+            const banner = document.getElementById('notificacionBanner');
+            banner.textContent = texto;
+            banner.className = `notificacion-banner visible ${tipo}`;
+            setTimeout(() => {
+                banner.classList.remove('visible');
+            }, 3000);
+        }
+
+        function mostrarNotificacionLocal(titulo, cuerpo) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(titulo, {
+                    body: cuerpo,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect fill="%23667eea" width="192" height="192"/><text x="50%" y="50%" font-size="100" font-weight="bold" fill="white" text-anchor="middle" dy=".3em">L</text></svg>',
+                    tag: titulo,
+                    requireInteraction: false
+                });
+            }
+        }
+
+        function verificarAlertas() {
+            const datos = cargarDatos();
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+
+            Object.entries(datos).forEach(([materia, tareas]) => {
+                tareas.filter(t => !t.completada).forEach(tarea => {
+                    const fecha = new Date(tarea.fecha);
+                    const dias = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24));
+
+                    // Alertas a 3 días y 1 día
+                    if (dias === 3 || dias === 1) {
+                        const ultimaAlerta = localStorage.getItem(`alerta_${tarea.id}`);
+                        if (ultimaAlerta !== `${dias}`) {
+                            mostrarNotificacionLocal(
+                                `📌 ${materia}`,
+                                `${tarea.descripcion} - Faltan ${dias} días`
+                            );
+                            localStorage.setItem(`alerta_${tarea.id}`, `${dias}`);
+                        }
+                    }
+                });
+            });
+        }
+
+        function exportarDatos() {
+            const datos = cargarDatos();
+            const dataStr = JSON.stringify(datos, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = `tracker_leon_${new Date().toISOString().split('T')[0]}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            mostrarMensaje('💾 Datos descargados correctamente', 'exito');
+        }
+
+        function renderizar() {
+            const datos = cargarDatos();
+            const container = document.getElementById('materiasContainer');
+            container.innerHTML = '';
+
+            Object.entries(materias).forEach(([materia, calif]) => {
+                const tareas = datos[materia] || [];
+                const completadas = tareas.filter(t => t.completada).length;
+
+                let card = document.createElement('div');
+                card.className = 'materia-card';
+                card.innerHTML = `
+                    <div class="materia-header">
+                        <div class="materia-nombre">${materia}</div>
+                        <span class="materia-calif ${getCalifEstilo(calif)}">Calificación: ${calif}/10</span>
+                        ${tareas.length > 0 ? `<div style="margin-top: 8px; font-size: 12px;">✓ ${completadas}/${tareas.length} tareas</div>` : ''}
+                    </div>
+                    <div class="materia-body">
+                        <div class="tareas-list">
+                            <h4>📋 Tareas Pendientes</h4>
+                            ${tareas.length === 0 ? 
+                                '<div class="sin-tareas">Sin tareas registradas</div>' :
+                                tareas.filter(t => !t.completada)
+                                    .sort((a, b) => new Date(a.fecha) - new Date(b.fecha))
+                                    .map(tarea => {
+                                        const dias = diasFaltantes(tarea.fecha);
+                                        const urgente = dias <= 7 ? 'proximo' : '';
+                                        const alerta = dias === 3 || dias === 1 ? ' <span class="tarea-alerta">⚠️ ALERTA</span>' : '';
+                                        return `
+                                            <div class="tarea-item">
+                                                <input type="checkbox" onchange="toggleTarea('${materia}', ${tarea.id})">
+                                                <div class="tarea-info">
+                                                    <span class="tarea-titulo">${tarea.descripcion}${alerta}</span>
+                                                    <span class="tarea-fecha ${urgente}">${tarea.fecha} (${dias} días)</span>
+                                                </div>
+                                                <button class="btn-eliminar" onclick="eliminarTarea('${materia}', ${tarea.id})">✕</button>
+                                            </div>
+                                        `;
+                                    }).join('')
+                            }
+                        </div>
+                        ${tareas.filter(t => t.completada).length > 0 ? `
+                            <div class="tareas-list">
+                                <h4>✅ Completadas</h4>
+                                ${tareas.filter(t => t.completada)
+                                    .map(tarea => `
+                                        <div class="tarea-item completada">
+                                            <input type="checkbox" checked onchange="toggleTarea('${materia}', ${tarea.id})">
+                                            <div class="tarea-info">
+                                                <span class="tarea-titulo">${tarea.descripcion}</span>
+                                                <span class="tarea-fecha">${tarea.fecha}</span>
+                                            </div>
+                                            <button class="btn-eliminar" onclick="eliminarTarea('${materia}', ${tarea.id})">✕</button>
+                                        </div>
+                                    `).join('')
+                                }
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            // Próximos vencimientos
+            let proximosCont = document.getElementById('proximosCont');
+            let todos = [];
+            Object.entries(datos).forEach(([materia, tareas]) => {
+                tareas.filter(t => !t.completada).forEach(t => {
+                    todos.push({ ...t, materia });
+                });
+            });
+
+            todos.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            let proximos = todos.slice(0, 10);
+
+            if (proximos.length === 0) {
+                proximosCont.innerHTML = '<div class="sin-proximitas">✨ ¡No hay tareas próximas! Gran trabajo.</div>';
+            } else {
+                proximosCont.innerHTML = proximos.map(tarea => {
+                    const dias = diasFaltantes(tarea.fecha);
+                    const alerta = dias === 3 || dias === 1 ? '⚠️ ' : '';
+                    return `
+                        <div class="proximo-item">
+                            <div class="proximo-item-titulo">${alerta}${tarea.descripcion}</div>
+                            <div class="proximo-item-materia">${tarea.materia}</div>
+                            <div style="margin-top: 8px; font-weight: 600;">📅 ${tarea.fecha} (${dias} días)</div>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Solicitar permiso de notificaciones
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // Verificar alertas cada minuto
+        setInterval(verificarAlertas, 60000);
+
+        renderizar();
+    </script>
+</body>
+</html>
